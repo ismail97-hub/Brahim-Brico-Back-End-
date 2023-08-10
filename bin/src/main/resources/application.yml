@@ -1,0 +1,23 @@
+server:
+  port: 8081
+  tomcat:
+    uri-encoding: "UTF-8"
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: "jdbc:mysql://localhost:3306/matstore"
+    username: root
+    password: orange
+  jpa:
+    hibernate:
+      ddl-auto: update
+    generate-ddl: true
+    properties:
+      hibernate:
+        globally_quoted_identifiers: true
+
+  data:
+    web:
+      pageable:
+        default-page-size: 51
