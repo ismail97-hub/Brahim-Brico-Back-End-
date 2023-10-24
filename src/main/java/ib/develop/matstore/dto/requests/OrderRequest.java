@@ -13,4 +13,6 @@ public class OrderRequest {
     List<ItemRequest> items;
     String clientName;
     String clientPhone;
+    double amountPaid;
+    double remainingBalance;
 }

@@ -2,6 +2,7 @@ package ib.develop.matstore.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import ib.develop.matstore.common.enums.MeasureUnit;
 import lombok.*;
 import java.text.DecimalFormat;
 
@@ -25,6 +26,9 @@ public class Item {
     @Column(nullable = false)
     private double quantity;
 
+    @Enumerated(EnumType.STRING)
+    private MeasureUnit measureUnit;
+
     @Column(nullable = false)
     private double unitPrice;
 
@@ -32,6 +36,7 @@ public class Item {
     @JoinColumn(name = "order_id",nullable = false)
     @JsonIgnore
     private Order order;
+
 
     public double getTotal(){
         double total = quantity * unitPrice;

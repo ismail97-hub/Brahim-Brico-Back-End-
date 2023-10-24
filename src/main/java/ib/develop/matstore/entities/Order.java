@@ -26,13 +26,17 @@ public class Order {
     private List<Item> items = new ArrayList<>();
 
     @Column(nullable = false)
-    String clientName;
+    private String clientName;
 
     @Column(nullable = false)
-    String clientPhone;
+    private String clientPhone;
 
     @Column(nullable = false)
-    LocalDateTime date;
+    private LocalDateTime date;
+
+    private double amountPaid;
+
+    private double remainingBalance;
 
     public double getTotal(){
         double total = 0;

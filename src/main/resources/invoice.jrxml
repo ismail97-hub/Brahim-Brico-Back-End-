@@ -8,6 +8,8 @@
 	<parameter name="datenow" class="java.lang.String"/>
 	<parameter name="clientPhone" class="java.lang.String"/>
 	<parameter name="info" class="ib.develop.matstore.entities.Info"/>
+	<parameter name="amountPaid" class="java.lang.Double"/>
+	<parameter name="remainingBalance" class="java.lang.Double"/>
 	<queryString>
 		<![CDATA[]]>
 	</queryString>
@@ -16,6 +18,7 @@
 	<field name="total" class="java.lang.Double"/>
 	<field name="unitPrice" class="java.lang.Double"/>
 	<field name="label" class="java.lang.String"/>
+	<field name="measureUnit" class="ib.develop.matstore.common.enums.MeasureUnit"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -130,7 +133,7 @@
 				<textFieldExpression><![CDATA["Qte"]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement mode="Opaque" x="40" y="0" width="226" height="20" backcolor="#F5F2F2" uuid="7cc036de-84ea-4e7d-8831-b7358613c21b"/>
+				<reportElement mode="Opaque" x="76" y="0" width="194" height="20" backcolor="#F5F2F2" uuid="7cc036de-84ea-4e7d-8831-b7358613c21b"/>
 				<box>
 					<pen lineWidth="1.0"/>
 					<topPen lineStyle="Solid" lineColor="#000000"/>
@@ -144,7 +147,7 @@
 				<textFieldExpression><![CDATA["Désignation"]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement mode="Opaque" x="266" y="0" width="52" height="20" backcolor="#F5F2F2" uuid="11b0b07d-5d8e-4430-b174-6efa0f5816bd">
+				<reportElement mode="Opaque" x="270" y="0" width="48" height="20" backcolor="#F5F2F2" uuid="11b0b07d-5d8e-4430-b174-6efa0f5816bd">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<box>
@@ -157,7 +160,7 @@
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="DejaVu Sans" size="7" isBold="true"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Pu"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["PU HT"]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement mode="Opaque" x="318" y="0" width="52" height="20" backcolor="#F5F2F2" uuid="f4f18988-aa90-460f-80f6-839b9479827a">
@@ -174,7 +177,23 @@
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="DejaVu Sans" size="7" isBold="true"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Total"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Total HT"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement mode="Opaque" x="40" y="0" width="36" height="20" backcolor="#F5F2F2" uuid="3fca5c99-a9f6-41ea-80fe-87f972cd30b4">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans" size="7" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Unité"]]></textFieldExpression>
 			</textField>
 		</band>
 	</columnHeader>
@@ -195,7 +214,7 @@
 				<textFieldExpression><![CDATA[$F{quantity}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="40" y="0" width="226" height="20" uuid="f39f224d-162f-4329-bbb2-e956f707fc36">
+				<reportElement x="76" y="0" width="194" height="20" uuid="f39f224d-162f-4329-bbb2-e956f707fc36">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<box>
@@ -220,7 +239,7 @@
 				<textFieldExpression><![CDATA[$F{total}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="266" y="0" width="52" height="20" uuid="39658e8a-cc27-49a0-b219-e0aa841457ed">
+				<reportElement x="270" y="0" width="48" height="20" uuid="39658e8a-cc27-49a0-b219-e0aa841457ed">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -231,6 +250,19 @@
 					<font fontName="DejaVu Sans" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{unitPrice}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="40" y="0" width="36" height="20" uuid="e404d874-4799-4578-95f6-a40fa3178104">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{measureUnit}.name()]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
@@ -253,22 +285,23 @@
 		</band>
 	</lastPageFooter>
 	<summary>
-		<band height="22" splitType="Stretch">
+		<band height="80" splitType="Stretch">
 			<textField>
-				<reportElement mode="Opaque" x="266" y="0" width="52" height="20" backcolor="#F5F2F2" uuid="1d273793-2c22-4a17-98d5-7cffd939b093">
+				<reportElement mode="Opaque" x="250" y="13" width="68" height="20" backcolor="#F5F2F2" uuid="1d273793-2c22-4a17-98d5-7cffd939b093">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
 				<box>
 					<pen lineWidth="1.0"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="DejaVu Sans" size="9" isBold="true"/>
+					<font fontName="DejaVu Sans" size="7" isBold="true"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Total"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Total HT"]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="318" y="0" width="52" height="20" uuid="4898366d-0c00-4321-8113-aa1f15cf1aff">
+				<reportElement x="318" y="13" width="52" height="20" uuid="4898366d-0c00-4321-8113-aa1f15cf1aff">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
@@ -279,6 +312,58 @@
 					<font fontName="Serif" size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{total}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement mode="Opaque" x="250" y="33" width="68" height="20" backcolor="#F5F2F2" uuid="5e175289-bbe7-40bb-9069-bcd11fa83683">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans" size="7" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Montant payé"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="318" y="33" width="52" height="20" uuid="7b416ee5-302c-4202-bf90-01764cb4837e">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Serif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{amountPaid}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement mode="Opaque" x="250" y="53" width="68" height="20" backcolor="#F5F2F2" uuid="aa6c4332-5144-440b-a597-c4d983d70df0">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans" size="7" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Reste à payer"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="318" y="53" width="52" height="20" uuid="644d9bf3-a650-44af-9a18-fe82e8f98bee">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Serif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{remainingBalance}]]></textFieldExpression>
 			</textField>
 		</band>
 	</summary>
