@@ -26,12 +26,10 @@ public interface OrderRepository extends JpaRepository<Order,Long> {
     double getTotalByDate(String date);
 
     @Query(nativeQuery = true,
-            value = "SELECT * from `order` \n" +
-            "WHERE client_phone like ?1 or client_name like ?1 or id = ?1 \n" +
-            "order by `date` desc",
-            countQuery = "SELECT count(*) from `order` \n" +
-            "WHERE client_phone like ?1 or client_name like ?1 or id = ?1 \n" +
-            "order by `date` desc")
+            value = "select * from `order` \n" +
+                    "WHERE MATCH(client_name,client_phone) AGAINST(?1) or id = ?1",
+            countQuery = "select count(*) from `order` \n" +
+                    "WHERE MATCH(client_name,client_phone) AGAINST(?1) or id = ?1")
     List<Order> search(String query,Pageable pageable);
 
     @Query(nativeQuery = true,
@@ -41,7 +39,8 @@ public interface OrderRepository extends JpaRepository<Order,Long> {
     double getTotalBySearch(String query);
 
     @Query(nativeQuery = true,
-            value="select  o.client_name as clientName,o.client_phone as ClientPhone,count(o.id) as invoicesCount,sum(o.remaining_balance) as remainingBalance  from `order` o \n" +
+            value="select  (select client_name from `order` o2 where o2.client_phone = o.client_phone limit 1 ) as clientName," +
+            "o.client_phone as ClientPhone,count(o.id) as invoicesCount,sum(o.remaining_balance) as remainingBalance  from `order` o \n" +
             "where remaining_balance !=0 \n" +
             "group by o.client_phone \n" +
             "order by max(o.`date`) desc \n",
@@ -51,20 +50,24 @@ public interface OrderRepository extends JpaRepository<Order,Long> {
        )
     List<DebtDTO> getDebts(Pageable pageable);
 
+    @Query(nativeQuery = true,value = "select sum(remaining_balance) from `order`")
+    double getTotalDebt();
+
     @Query(nativeQuery = true,
-      value = "select  o.client_name as clientName,o.client_phone as ClientPhone,count(o.id) as invoicesCount,sum(o.remaining_balance) as remainingBalance  from `order` o\n" +
-              "where remaining_balance !=0 and client_phone like ?1 or client_name like ?1 \n" +
+      value = "select  (select client_name from `order` o2 where o2.client_phone = o.client_phone limit 1 ) as clientName," +
+              "o.client_phone as ClientPhone,count(o.id) as invoicesCount,sum(o.remaining_balance) as remainingBalance  from `order` o\n" +
+              "where remaining_balance !=0 and (client_phone like ?1 or client_name like ?1) \n" +
               "group by o.client_phone \n" +
               "order by max(o.`date`) desc ",
       countQuery = "SELECT COUNT(DISTINCT client_phone) AS count FROM `order`\n" +
-              "where remaining_balance !=0 and client_phone like ?1 or client_name like ?1 ")
+              "where remaining_balance !=0 and (client_phone like ?1 or client_name like ?1) ")
     List<DebtDTO> searchDebt(String query,Pageable pageable);
 
     @Query(nativeQuery = true,
-            value="select  o.client_name as clientName,o.client_phone as ClientPhone,count(o.id) as invoicesCount,sum(o.remaining_balance) as remainingBalance  from `order` o \n" +
+            value="select  (select client_name from `order` o2 where o2.client_phone = ?1  limit 1 ) as clientName," +
+                    "o.client_phone as ClientPhone,count(o.id) as invoicesCount,sum(o.remaining_balance) as remainingBalance  from `order` o \n" +
                     "where remaining_balance !=0 and client_phone = ?1 \n" +
-                    "group by o.client_phone \n" +
-                    "order by o.`date` desc \n"
+                    "group by o.client_phone \n"
     )
     DebtDTO getDebtByClientPhone(String clientPhone);
 

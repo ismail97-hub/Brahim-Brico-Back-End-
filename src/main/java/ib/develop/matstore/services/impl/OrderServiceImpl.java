@@ -1,27 +1,30 @@
 package ib.develop.matstore.services.impl;
 
+import ib.develop.matstore.common.enums.LogType;
 import ib.develop.matstore.common.services.BaseServiceImpl;
 import ib.develop.matstore.dto.DebtDTO;
+import ib.develop.matstore.dto.DebtListDTO;
 import ib.develop.matstore.dto.OrdersListDTO;
 import ib.develop.matstore.dto.requests.ItemRequest;
 import ib.develop.matstore.dto.requests.OrderRequest;
 import ib.develop.matstore.dto.update.ItemUpdateDTO;
 import ib.develop.matstore.dto.update.OrderUpdateDTO;
 import ib.develop.matstore.entities.Item;
+import ib.develop.matstore.entities.Log;
 import ib.develop.matstore.entities.Order;
 import ib.develop.matstore.repositories.OrderRepository;
-import ib.develop.matstore.services.InfoService;
-import ib.develop.matstore.services.ItemService;
-import ib.develop.matstore.services.OrderService;
+import ib.develop.matstore.services.*;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.Timestamp;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -35,21 +38,37 @@ public class OrderServiceImpl extends BaseServiceImpl<Order,Long> implements Ord
     private InfoService infoService;
 
     @Autowired
+    private LogService logService;
+
+    @Autowired
     private OrderRepository repository;
 
     @Override
     public long saveOrder(OrderRequest orderRequest) throws JRException, IOException {
+        String formated  = String.format("%.2f",orderRequest.getRemainingBalance());
+        double remainingBalance = Double.parseDouble(formated.replace(",","."));
+
         Order savedOrder = save(Order.builder()
                 .items(new ArrayList<>())
                 .date(LocalDateTime.now())
                 .amountPaid(orderRequest.getAmountPaid())
-                .remainingBalance(orderRequest.getRemainingBalance())
+                .remainingBalance(remainingBalance)
+                .discount(orderRequest.getDiscount())
                 .clientPhone(orderRequest.getClientPhone())
                 .clientName(orderRequest.getClientName())
                 .build());
         for (var item: orderRequest.getItems()) {
             savedOrder.getItems().add(itemService.saveItem(item,savedOrder));
         }
+        logService.save(Log.builder()
+                        .date(LocalDate.now())
+                        .time(Timestamp.valueOf(LocalDateTime.now()).getTime())
+                        .type(LogType.INSTANT_PAYMENT)
+                        .clientPhone(orderRequest.getClientPhone())
+                        .clientName(orderRequest.getClientName())
+                        .order(savedOrder)
+                        .amount(orderRequest.getAmountPaid())
+                .build());
         printOrder(savedOrder.getId());
         return savedOrder.getId();
     }
@@ -57,6 +76,12 @@ public class OrderServiceImpl extends BaseServiceImpl<Order,Long> implements Ord
     @Override
     public long updateOrder(OrderUpdateDTO orderUpdateDTO) {
         Order order = findById(orderUpdateDTO.getId());
+
+        if(order.getAmountPaid()==0&&order.getRemainingBalance()==0){
+            order.setAmountPaid(order.getTotal());
+            order.setRemainingBalance(0);
+        }
+
         if (!orderUpdateDTO.getClientName().isEmpty()){
             order.setClientName(orderUpdateDTO.getClientName());
         }
@@ -83,35 +108,46 @@ public class OrderServiceImpl extends BaseServiceImpl<Order,Long> implements Ord
                 itemService.deleteItem(id);
             }
         }
-        order.setRemainingBalance(order.getTotal()-order.getAmountPaid());
+
+        String formated  = String.format("%.2f",order.getTotal()-order.getAmountPaid());
+        double remainingBalance = Double.parseDouble(formated.replace(",","."));
+        System.out.println(remainingBalance);
+        order.setRemainingBalance(remainingBalance);
+
         Order o =  save(order);
         return o.getId();
     }
 
     @Override
     public void printOrder(long id) throws JRException, IOException {
-        Order order = findById(id);
 
-        JRBeanCollectionDataSource beanCollectionDataSource = new JRBeanCollectionDataSource(order.getItems());
-
-        JasperReport compileReport = JasperCompileManager.compileReport(getClass().getResourceAsStream("/invoice.jrxml"));
-
-        DateTimeFormatter format = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-        String date =  order.getDate().format(format);
-
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("total",order.getTotal());
-        map.put("amountPaid",order.getAmountPaid());
-        map.put("remainingBalance",order.getRemainingBalance());
-        map.put("date",date);
-        map.put("clientName",order.getClientName());
-        map.put("clientPhone",order.getClientPhone());
-        map.put("id",order.getId());
-        map.put("info",infoService.getInfo());
-        map.put("datenow", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-        JasperPrint jasperPrint = JasperFillManager.fillReport(compileReport,map, beanCollectionDataSource);
+        JasperPrint jasperPrint = getJasperPrint(id);
 
         JasperPrintManager.printReport(jasperPrint,false);
+    }
+
+    @Override
+    public byte[] downloadOrderPdf(long id) throws JRException {
+        JasperPrint jasperPrint = getJasperPrint(id);
+
+        return JasperExportManager.exportReportToPdf(jasperPrint);
+    }
+
+    @Override
+    public void setDiscount(long id, double discount) {
+        Order order = findById(id);
+        if(order.getRemainingBalance()!=0){
+            if (discount<=order.getRemainingBalance()){
+                double diff = discount - order.getDiscount();
+                order.setDiscount(order.getDiscount()+diff);
+                order.setRemainingBalance(order.getRemainingBalance()-diff);
+                save(order);
+            }else {
+                throw new RuntimeException("The discount is greater than remaining balance");
+            }
+        }else {
+            throw new RuntimeException("There is no remaining balance");
+        }
     }
 
     @Override
@@ -126,7 +162,6 @@ public class OrderServiceImpl extends BaseServiceImpl<Order,Long> implements Ord
 
     @Override
     public OrdersListDTO search(String query, Pageable pageable) {
-        query = "%"+query+"%";
         var orders = repository.search(query, pageable);
         var total = repository.getTotalBySearch(query);
         return OrdersListDTO.builder()
@@ -136,14 +171,20 @@ public class OrderServiceImpl extends BaseServiceImpl<Order,Long> implements Ord
     }
 
     @Override
-    public List<DebtDTO> getDebts(Pageable pageable) {
-        return repository.getDebts(pageable);
+    public DebtListDTO getDebts(Pageable pageable) {
+        return DebtListDTO.builder()
+                .total(repository.getTotalDebt())
+                .debts(repository.getDebts(pageable))
+                .build();
     }
 
     @Override
-    public List<DebtDTO> searchDebt(String query, Pageable pageable) {
+    public DebtListDTO searchDebt(String query, Pageable pageable) {
         query = "%"+query+"%";
-        return repository.searchDebt(query,pageable);
+        return DebtListDTO.builder()
+                .total(repository.getTotalDebt())
+                .debts(repository.searchDebt(query,pageable))
+                .build();
     }
 
     @Override
@@ -164,9 +205,43 @@ public class OrderServiceImpl extends BaseServiceImpl<Order,Long> implements Ord
 
     @Override
     public void payInvoice(long orderId, double amountPaid) {
+
         Order order = findById(orderId);
         order.setAmountPaid(order.getAmountPaid()+amountPaid);
         order.setRemainingBalance(order.getRemainingBalance()-amountPaid);
         save(order);
+        logService.save(Log.builder()
+                .date(LocalDate.now())
+                .time(Timestamp.valueOf(LocalDateTime.now()).getTime())
+                .type(LogType.SETTLEMENT)
+                .clientPhone(order.getClientPhone())
+                .clientName(order.getClientName())
+                .order(order)
+                .amount(amountPaid)
+                .build());
+    }
+
+    JasperPrint getJasperPrint(long id) throws JRException {
+        Order order = findById(id);
+
+        JRBeanCollectionDataSource beanCollectionDataSource = new JRBeanCollectionDataSource(order.getItems());
+
+        JasperReport compileReport = JasperCompileManager.compileReport(getClass().getResourceAsStream("/invoice.jrxml"));
+
+        DateTimeFormatter format = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String date =  order.getDate().format(format);
+
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("total",order.getTotal());
+        map.put("amountPaid",order.getAmountPaid());
+        map.put("remainingBalance",order.getRemainingBalance());
+        map.put("discount",order.getDiscount());
+        map.put("date",date);
+        map.put("clientName",order.getClientName());
+        map.put("clientPhone",order.getClientPhone());
+        map.put("id",order.getId());
+        map.put("info",infoService.getInfo());
+        map.put("datenow", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        return JasperFillManager.fillReport(compileReport,map, beanCollectionDataSource);
     }
 }

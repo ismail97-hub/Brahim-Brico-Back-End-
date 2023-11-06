@@ -2,6 +2,7 @@ package ib.develop.matstore.controllers;
 
 import ib.develop.matstore.common.controllers.BaseController;
 import ib.develop.matstore.dto.DebtDTO;
+import ib.develop.matstore.dto.DebtListDTO;
 import ib.develop.matstore.dto.OrdersListDTO;
 import ib.develop.matstore.dto.requests.OrderRequest;
 import ib.develop.matstore.dto.update.OrderUpdateDTO;
@@ -10,6 +11,7 @@ import ib.develop.matstore.services.OrderService;
 import net.sf.jasperreports.engine.JRException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.io.IOException;
@@ -36,6 +38,16 @@ public class OrderController extends BaseController<Order,Long> {
         orderService.printOrder(id);
     }
 
+    @GetMapping(value = "/download/facture{id}",produces = MediaType.APPLICATION_PDF_VALUE)
+    public byte[] downloadOrderPdf(@PathVariable long id) throws JRException {
+        return orderService.downloadOrderPdf(id);
+    }
+
+    @PutMapping(value = "/{id}/discount",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public void setDiscount(@PathVariable long id,@RequestParam("discount") double discount) {
+        orderService.setDiscount(id,discount);
+    }
+
     @GetMapping("/date/{date}")
     public OrdersListDTO getOrdersByDate(@PathVariable String date, Pageable pageable){
         return orderService.getOrdersByDate(date,pageable);
@@ -47,17 +59,22 @@ public class OrderController extends BaseController<Order,Long> {
     }
 
     @GetMapping("/debts")
-    public List<DebtDTO> getDebts(Pageable pageable){
+    public DebtListDTO getDebts(Pageable pageable){
         return orderService.getDebts(pageable);
     }
 
     @GetMapping("/debt/search/{query}")
-    public List<DebtDTO> searchDebt(@PathVariable String query,Pageable pageable){
+    public DebtListDTO searchDebt(@PathVariable String query,Pageable pageable){
         return orderService.searchDebt(query, pageable);
     }
 
     @GetMapping("/{clientPhone}/debts")
     public List<Order> getDebtOrdersByClientPhone(@PathVariable String clientPhone,Pageable pageable){
         return orderService.getDebtOrdersByClientPhone(clientPhone,pageable);
+    }
+
+    @PostMapping(value = "/{id}/pay",consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public void payInvoice(@PathVariable long id,@RequestParam("amount") double amount){
+        orderService.payInvoice(id,amount);
     }
 }

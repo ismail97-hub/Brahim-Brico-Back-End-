@@ -34,6 +34,8 @@ public class Order {
     @Column(nullable = false)
     private LocalDateTime date;
 
+    private double discount;
+
     private double amountPaid;
 
     private double remainingBalance;
