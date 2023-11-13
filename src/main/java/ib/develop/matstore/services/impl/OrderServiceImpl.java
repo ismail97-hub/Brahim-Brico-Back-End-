@@ -69,7 +69,6 @@ public class OrderServiceImpl extends BaseServiceImpl<Order,Long> implements Ord
                         .order(savedOrder)
                         .amount(orderRequest.getAmountPaid())
                 .build());
-        printOrder(savedOrder.getId());
         return savedOrder.getId();
     }
 
@@ -116,6 +115,13 @@ public class OrderServiceImpl extends BaseServiceImpl<Order,Long> implements Ord
 
         Order o =  save(order);
         return o.getId();
+    }
+
+    @Override
+    public long saveOrderAndPrint(OrderRequest orderRequest) throws JRException, IOException {
+        long orderId = saveOrder(orderRequest);
+        printOrder(orderId);
+        return orderId;
     }
 
     @Override

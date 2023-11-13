@@ -28,6 +28,11 @@ public class OrderController extends BaseController<Order,Long> {
         return orderService.saveOrder(orderRequest);
     }
 
+    @PostMapping("/new/print")
+    public long saveOrderAndPrint(@RequestBody OrderRequest orderRequest) throws JRException, IOException {
+        return orderService.saveOrderAndPrint(orderRequest);
+    }
+
     @PutMapping("/update")
     public long updateOrder(@RequestBody OrderUpdateDTO orderUpdateDTO){
         return orderService.updateOrder(orderUpdateDTO);

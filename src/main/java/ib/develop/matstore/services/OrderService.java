@@ -19,6 +19,8 @@ public interface OrderService extends BaseService<Order,Long> {
 
     long updateOrder(OrderUpdateDTO orderUpdateDTO);
 
+    long saveOrderAndPrint(OrderRequest orderRequest) throws JRException,IOException;
+
     void printOrder(long id) throws JRException,IOException;
 
     byte[] downloadOrderPdf(long id) throws JRException;
