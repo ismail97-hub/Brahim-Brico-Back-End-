@@ -22,10 +22,10 @@ jobs:
       - name: Generate the package
         run: mvn clean install -DskipTests -Dmaven.compiler.forceJavacCompilerUse=true
       - name: Deploy the package to the remote server
-        uses: ArthurYdalgo/github-action-scp@0.7.5
+        uses: appleboy/scp-action@v0.1.7
         with:
-          local: target/matstore-0.0.1-SNAPSHOT.jar
-          remote: app/matstore-0.0.1-SNAPSHOT.jar # My remote directory
+          source: target/matstore-0.0.1-SNAPSHOT.jar
+          target: app/matstore-0.0.1-SNAPSHOT.jar # My remote directory
           host: ${{ secrets.HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
