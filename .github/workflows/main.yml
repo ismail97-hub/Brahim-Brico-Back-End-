@@ -36,7 +36,7 @@ jobs:
           script: |
             cd app/
             kill -9 `cat pid.txt` && rm pid.txt
-            nohup java -jar matstore-0.0.1-SNAPSHOT.jar > matstore.log 2>&1 & echo $! > pid.txt
+            nohup java -jar target/matstore-0.0.1-SNAPSHOT.jar > matstore.log 2>&1 & echo $! > pid.txt
           host: ${{ secrets.HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
