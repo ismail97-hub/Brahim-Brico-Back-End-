@@ -28,6 +28,7 @@ public class ItemServiceImpl extends BaseServiceImpl<Item,Long> implements ItemS
                 .label(itemRequest.getLabel())
                 .unitPrice(itemRequest.getUnitPrice())
                 .quantity(itemRequest.getQuantity())
+                .measureUnit(itemRequest.getMeasureUnit())
                 .build());
         if (product!=null){
             product.setQuantity(product.getQuantity()-itemRequest.getQuantity());
@@ -35,5 +36,16 @@ public class ItemServiceImpl extends BaseServiceImpl<Item,Long> implements ItemS
         }
 
         return item;
+    }
+
+    @Override
+    public void deleteItem(long id) {
+        Item item = findById(id);
+        if (item.getProduct()!=null){
+            Product product = item.getProduct();
+            product.setQuantity(product.getQuantity()+item.getQuantity());
+            productService.save(product);
+        }
+        delete(id);
     }
 }

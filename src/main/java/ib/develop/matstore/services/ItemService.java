@@ -7,4 +7,6 @@ import ib.develop.matstore.entities.Order;
 
 public interface ItemService extends BaseService<Item,Long>{
     Item saveItem(ItemRequest itemRequest, Order order);
+
+    void deleteItem(long id);
 }

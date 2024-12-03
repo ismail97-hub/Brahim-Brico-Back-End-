@@ -1,9 +1,6 @@
-package ib.develop.matstore.dto.requests;
-
+package ib.develop.matstore.dto.update;
 
 import ib.develop.matstore.common.enums.MeasureUnit;
-import ib.develop.matstore.entities.Product;
-import jakarta.persistence.ManyToOne;
 import lombok.*;
 
 @AllArgsConstructor
@@ -11,8 +8,8 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
-public class ItemRequest {
-    private long productId;
+public class ItemUpdateDTO {
+    private long id;
 
     private double unitPrice;
 

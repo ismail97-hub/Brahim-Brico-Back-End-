@@ -1,10 +1,9 @@
 package ib.develop.matstore.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
 import ib.develop.matstore.common.enums.MeasureUnit;
+import jakarta.persistence.*;
 import lombok.*;
-import java.text.DecimalFormat;
 
 @Entity
 @AllArgsConstructor
@@ -12,31 +11,25 @@ import java.text.DecimalFormat;
 @Getter
 @Setter
 @Builder
-public class Item {
+public class OperationItem {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ManyToOne
-    private Product product;
-
-    @Column(nullable = false)
     private String label;
 
-    @Column(nullable = false)
     private double quantity;
 
     @Enumerated(EnumType.STRING)
-    private MeasureUnit measureUnit;
+    private MeasureUnit unit;
 
-    @Column(nullable = false)
     private double unitPrice;
 
     @ManyToOne
-    @JoinColumn(name = "order_id",nullable = false)
+    @JoinColumn(name = "operation_id",nullable = false)
     @JsonIgnore
-    private Order order;
-
+    private SupplierOperation operation;
 
     public double getTotal(){
         double total = quantity * unitPrice;
